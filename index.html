@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <title>SCIG</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f6f2; --fg:#1e1e1e;
+      --accent1:#3ddc97; --accent2:#7b5cff;
+      --surface:#ececf9;
+      --title-bg:#000; --title-fg:#fff;
+      --toggle-bg:#fff; --toggle-fg:#1e1e1e;
+      --rule:#d8d8e0;
+      --term-chrome:#f5f5f7; --term-border:#e2e2ea;
+      --term-body:#111; --term-text:#cfd3d7;
+      --dot-red:#ff5f56; --dot-yellow:#ffbd2e; --dot-green:#27c93f;
+      --blue-tilde:#4ea3ff;
+    }
+    html[data-theme="dark"]{
+      --bg:#10121a; --fg:#e6e6eb;
+      --accent1:#3ddc97; --accent2:#9d6bff;
+      --surface:#1d1f2b;
+      --title-bg:linear-gradient(135deg,#1a1a1d,#2a2a32,#1a1a1d); --title-fg:#f0f0f0;
+      --toggle-bg:#1d1f2b; --toggle-fg:#3ddc97;
+      --rule:#2b2d3a;
+      --term-chrome:#1b1d26; --term-border:#2a2d3a;
+      --term-body:#0f1117; --term-text:#cfd3d7;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:'EB Garamond', serif;
+      background:var(--bg); color:var(--fg);
+      transition:background .3s ease,color .3s ease;
+    }
+    .wrap{ width:min(100% - 32px,900px); margin:16px auto; }
+
+    .header{ display:flex; align-items:center; margin-bottom:16px; }
+    .site-title{
+      font-size:clamp(1.6rem,4vw,2.2rem);
+      margin:0; padding:10px 18px; border-radius:10px;
+      background:var(--title-bg); color:var(--title-fg);
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+      box-shadow:0 3px 12px rgba(0,0,0,.25);
+    }
+
+    .fixed-toggle{ position:fixed; top:16px; right:16px; z-index:1000; }
+    .theme-toggle{
+      background:var(--toggle-bg); color:var(--toggle-fg);
+      border:none; border-radius:50%; padding:14px; cursor:pointer; font:inherit;
+      box-shadow:0 4px 12px rgba(0,0,0,.3);
+      transition:background .25s ease,transform .2s ease,color .25s ease;
+    }
+    .theme-toggle:hover{ background:var(--accent1); color:#111; transform:scale(1.12); box-shadow:0 0 14px var(--accent1); }
+    .theme-toggle i{ font-size:20px; }
+
+    .term-window{
+      border:1px solid var(--term-border);
+      border-radius:14px;
+      background:var(--term-chrome);
+      box-shadow:0 12px 40px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .term-titlebar{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px; border-bottom:1px solid var(--term-border);
+    }
+    .dots{ display:flex; gap:8px; }
+    .dot{ width:12px; height:12px; border-radius:50%; }
+    .dot.red{ background:var(--dot-red); }
+    .dot.yellow{ background:var(--dot-yellow); }
+    .dot.green{ background:var(--dot-green); }
+    .term-title{
+      margin-left:4px; font-size:.9rem; opacity:.8;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    }
+    .term-body{
+      background:var(--term-body); padding:16px 18px;
+    }
+
+    .terminal-line{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+      color:var(--term-text);
+      display:block; white-space:pre-wrap; overflow-wrap:anywhere;
+    }
+    .prompt{ color:var(--accent1); font-weight:700; }
+    .prompt .dir{ color:var(--blue-tilde); }
+    .cursor{
+      width:.65em; height:1.05em; background:currentColor;
+      display:inline-block; margin-left:4px;
+      animation:blink 1s steps(1,end) infinite; vertical-align:-0.12em;
+    }
+    @keyframes blink{ 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+    hr{ border:0; border-top:1px solid var(--rule); margin:16px 0; }
+
+    a{ color:var(--accent2); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+    .center{ text-align:center; }
+    .github-btn{
+      display:inline-block; padding:12px 22px; margin-top:16px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+      font-weight:bold; background:linear-gradient(135deg,var(--accent1),var(--accent2));
+      color:#fff; border:none; border-radius:10px; text-decoration:none;
+      box-shadow:0 4px 14px rgba(0,0,0,.35);
+      transition:transform .3s ease, box-shadow .3s ease;
+    }
+    .github-btn:hover{ transform:translateY(-2px) scale(1.05); box-shadow:0 6px 20px rgba(0,0,0,.5),0 0 12px var(--accent2); }
+  </style>
+  <script>
+    const sysPref=window.matchMedia('(prefers-color-scheme: dark)');
+    function applyTheme(mode){
+      const html=document.documentElement;
+      if(mode==='auto'){ html.setAttribute('data-theme',sysPref.matches?'dark':'light'); html.setAttribute('data-theme-auto','1'); }
+      else{ html.setAttribute('data-theme',mode); html.removeAttribute('data-theme-auto'); }
+      updateToggleUI();
+    }
+    function currentMode(){ const stored=localStorage.getItem('theme'); return stored?stored:'auto'; }
+    function setMode(mode){ if(mode==='auto') localStorage.removeItem('theme'); else localStorage.setItem('theme',mode); applyTheme(mode); }
+    function cycleMode(){ const order=['light','dark','auto']; const idx=order.indexOf(currentMode()); setMode(order[(idx+1)%order.length]); }
+    function updateToggleUI(){
+      const mode=currentMode(); const isAuto=!localStorage.getItem('theme');
+      const effective=isAuto?(sysPref.matches?'dark':'light'):mode;
+      const icon=document.getElementById('theme-icon');
+      if(isAuto) icon.className='fa-solid fa-circle-half-stroke';
+      else if(effective==='dark') icon.className='fa-solid fa-sun';
+      else icon.className='fa-solid fa-moon';
+    }
+    (function init(){
+      const stored=localStorage.getItem('theme')||'auto'; applyTheme(stored);
+      (sysPref.addEventListener?sysPref.addEventListener('change',()=>{ if(!localStorage.getItem('theme')) applyTheme('auto'); })
+                               :sysPref.addListener(()=>{ if(!localStorage.getItem('theme')) applyTheme('auto'); }));
+      document.addEventListener('DOMContentLoaded',updateToggleUI);
+    })();
+  </script>
+</head>
+<body>
+  <div class="fixed-toggle">
+    <button class="theme-toggle" onclick="cycleMode()" aria-label="Cycle color theme">
+      <i id="theme-icon" class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div class="wrap">
+    <div class="header">
+      <h1 class="site-title">scigland</h1>
+    </div>
+
+    <div class="term-window">
+      <div class="term-titlebar">
+        <div class="dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <div class="term-title">bash — 80×24</div>
+      </div>
+      <div class="term-body">
+        <p class="terminal-line">
+          <span class="prompt"><span class="user">scig</span>@<span class="host">scigward</span>:<span class="dir">~</span>$</span>
+          <span> Hey, my name is scigward and this is my first website</span><span class="cursor" aria-hidden="true"></span>
+        </p>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="center">
+      <a href="https://github.com/scigward" target="_blank" class="github-btn">
+        <i class="fab fa-github"></i> My GitHub
+      </a>
+    </div>
+  </div>
+</body>
+</html>
